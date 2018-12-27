@@ -1,28 +1,23 @@
 package com.tensquare.article.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-
+import com.tensquare.article.dao.ArticleDao;
+import com.tensquare.article.pojo.Article;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
 import util.IdWorker;
 
-import com.tensquare.article.dao.ArticleDao;
-import com.tensquare.article.pojo.Article;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 服务层
@@ -31,6 +26,7 @@ import com.tensquare.article.pojo.Article;
  *
  */
 @Service
+@Transactional
 public class ArticleService {
 
 	@Autowired
@@ -38,6 +34,17 @@ public class ArticleService {
 	
 	@Autowired
 	private IdWorker idWorker;
+
+	@Autowired
+	private RedisTemplate redisTemplate;
+
+	public void updateState(String id){
+		articleDao.updateState(id);
+	}
+
+	public void updateThumbup(String id){
+		articleDao.updateThumbup(id);
+	}
 
 	/**
 	 * 查询全部列表
@@ -75,10 +82,18 @@ public class ArticleService {
 	/**
 	 * 根据ID查询实体
 	 * @param id
-	 * @return
+	 * @return redis的应用
 	 */
 	public Article findById(String id) {
-		return articleDao.findById(id).get();
+		//先从缓存中，查询当前对象
+		Article article = (Article) redisTemplate.opsForValue().get("article_" + id);
+		//如果没有取到
+		if(article == null){
+			//到数据库中查
+			article =articleDao.findById(id).get();
+			redisTemplate.opsForValue().set("article_" + id,article);
+		}
+		return article;
 	}
 
 	/**
@@ -91,10 +106,11 @@ public class ArticleService {
 	}
 
 	/**
-	 * 修改
+	 * 修改(从redis中删除，要修改的数据。查询的时候重新缓存进Redis)
 	 * @param article
 	 */
 	public void update(Article article) {
+		redisTemplate.delete("article_" + article.getId());
 		articleDao.save(article);
 	}
 
@@ -103,6 +119,7 @@ public class ArticleService {
 	 * @param id
 	 */
 	public void deleteById(String id) {
+		redisTemplate.delete(id);
 		articleDao.deleteById(id);
 	}
 

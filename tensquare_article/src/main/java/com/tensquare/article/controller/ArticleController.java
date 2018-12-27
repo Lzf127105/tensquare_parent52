@@ -22,7 +22,19 @@ public class ArticleController {
 	@Autowired
 	private ArticleService articleService;
 	
-	
+
+	@PutMapping(value = "/examine/{articleId}")
+	public Result updateState(@PathVariable String articleId){
+		articleService.updateState(articleId);
+		return new Result(true,StatusCode.OK,"审核成功");
+	}
+
+	@PutMapping(value = "/thumbup/{articleId}")
+	public Result updateThumbup(@PathVariable String articleId){
+		articleService.updateThumbup(articleId);
+		return new Result(true,StatusCode.OK,"点赞成功");
+	}
+
 	/**
 	 * 查询全部数据
 	 * @return
