@@ -1,28 +1,23 @@
 package com.tensquare.gathering.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import com.tensquare.gathering.dao.GatheringDao;
+import com.tensquare.gathering.pojo.Gathering;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import util.IdWorker;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-
-import util.IdWorker;
-
-import com.tensquare.gathering.dao.GatheringDao;
-import com.tensquare.gathering.pojo.Gathering;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 服务层
@@ -76,7 +71,13 @@ public class GatheringService {
 	 * 根据ID查询实体
 	 * @param id
 	 * @return
+	 * @Cacheable  表示缓存（存）
+	 * @CacheEvict 表示缓存（删）
+	 * # 表示拿到当前方法的参数值
+	 * 整个意思就是当要执行gatheringDao.findById(id).get();时，
+	 * 会优先去Spring的缓存中去查，跟这个（id）和（方法）一致的缓存
 	 */
+	@Cacheable(value = "gathering",key = "#id")
 	public Gathering findById(String id) {
 		return gatheringDao.findById(id).get();
 	}
@@ -91,9 +92,10 @@ public class GatheringService {
 	}
 
 	/**
-	 * 修改
+	 * 修改 @CacheEvict(实际上是 先查在删除)
 	 * @param gathering
 	 */
+	@CacheEvict(value = "gathering",key = "#gathering.id")
 	public void update(Gathering gathering) {
 		gatheringDao.save(gathering);
 	}
@@ -102,6 +104,7 @@ public class GatheringService {
 	 * 删除
 	 * @param id
 	 */
+	@CacheEvict(value = "gathering",key = "#id")
 	public void deleteById(String id) {
 		gatheringDao.deleteById(id);
 	}
