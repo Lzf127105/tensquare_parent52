@@ -3,6 +3,7 @@ package com.tensquare.spit.pojo;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 实体类
@@ -14,7 +15,7 @@ public class Spit implements Serializable{
 	@Id
 	private String _id;//ID
 	private String content;//内容
-	private String publishtime;//发布时间
+	private Date publishtime;//发布时间
 	private String userid;//用户id
 	private String nickname;//昵称
 	private Integer visits;//访问人数
@@ -40,11 +41,11 @@ public class Spit implements Serializable{
 		this.content = content;
 	}
 
-	public String getPublishtime() {
+	public Date getPublishtime() {
 		return publishtime;
 	}
 
-	public void setPublishtime(String publishtime) {
+	public void setPublishtime(Date publishtime) {
 		this.publishtime = publishtime;
 	}
 
