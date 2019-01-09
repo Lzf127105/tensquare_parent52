@@ -6,6 +6,7 @@ import entity.Result;
 import entity.StatusCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -22,6 +23,9 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 
+	@Autowired
+	private RedisTemplate redisTemplate;
+
 	/**
 	 * 发送短息验证码
 	 */
@@ -29,6 +33,23 @@ public class UserController {
 	public Result sendSms(@PathVariable String mobile){
 		userService.sendSms(mobile);
 		return new Result(true,StatusCode.OK,"查询成功");
+	}
+
+	/**
+	 * 注册
+	 */
+	@PostMapping(value = "/register/{code}")
+	public Result register(@PathVariable String code,@RequestBody User user){
+		//得到缓存中的验证码
+		String checkCodeRedis = (String) redisTemplate.opsForValue().get("checkCode_"+user.getMobile());
+		if(checkCodeRedis.isEmpty()){
+			return new Result(false,StatusCode.ERROR,"验证码不能为空！");
+		}
+		if(!checkCodeRedis.equals(code)){
+			return new Result(false,StatusCode.ERROR,"请输入正确的验证码！");
+		}
+		userService.add(user);
+		return new Result(true,StatusCode.OK,"注册成功！");
 	}
 	
 	/**

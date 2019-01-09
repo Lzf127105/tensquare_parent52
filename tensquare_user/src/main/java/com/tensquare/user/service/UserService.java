@@ -16,10 +16,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,6 +40,13 @@ public class UserService {
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 
+	/**
+	 * http://192.168.78.128:15672 (rabbit 查看消息)
+	 * 大致流程：1、用户点击获取验证码（后台随机产生一条6位数的验证码，发送到消息队列（缓存中也存放一条））
+	 * 2、而在消息队列那边（MQ）,有个专门消费短信验证码的。（只要队列中有消息，就会将验证码发到填写的号码上去）
+	 * 3、注册，对比验证码（用户填写的验证码 和 redis中存的验证码 对比）
+	 * @param mobile
+	 */
 	public void sendSms(String mobile){
 		//生成六位数字随机数
 		String checkCode = RandomStringUtils.randomNumeric(6);
@@ -105,6 +109,12 @@ public class UserService {
 	 */
 	public void add(User user) {
 		user.setId( idWorker.nextId()+"" );
+		user.setFollowcount(0);//关注数        
+		user.setFanscount(0);//粉丝数        
+		user.setOnline(0L);//在线时长        
+		user.setRegdate(new Date());//注册日期        
+		user.setUpdatedate(new Date());//更新日期        
+		user.setLastdate(new Date());//最后登陆日期
 		userDao.save(user);
 	}
 
