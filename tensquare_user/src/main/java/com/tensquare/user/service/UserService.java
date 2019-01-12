@@ -9,13 +9,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import util.IdWorker;
+import util.JwtUtil;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -38,7 +41,16 @@ public class UserService {
 	private RedisTemplate redisTemplate;
 
 	@Autowired
-	private RabbitTemplate rabbitTemplate;
+	private RabbitTemplate rabbitTemplate; //暂时注释了，不加人消息队列，在控制台看就可以了
+
+	@Autowired
+	private BCryptPasswordEncoder encoder;
+
+	@Autowired
+	private HttpServletRequest request;
+
+	@Autowired
+	private JwtUtil jwtUtil;
 
 	/**
 	 * http://192.168.78.128:15672 (rabbit 查看消息)
@@ -56,7 +68,7 @@ public class UserService {
 		Map<Object, Object> map = new HashMap<>();
 		map.put("mobile",mobile);
 		map.put("checkCode",checkCode);
-		rabbitTemplate.convertAndSend("sms",map);
+		//rabbitTemplate.convertAndSend("sms",map);
 		//在控制台显示一份（方便测试）
 		System.out.println("验证码为："+checkCode);
 	}
@@ -109,6 +121,7 @@ public class UserService {
 	 */
 	public void add(User user) {
 		user.setId( idWorker.nextId()+"" );
+		user.setPassword(encoder.encode(user.getPassword()));
 		user.setFollowcount(0);//关注数        
 		user.setFanscount(0);//粉丝数        
 		user.setOnline(0L);//在线时长        
@@ -129,8 +142,35 @@ public class UserService {
 	/**
 	 * 删除
 	 * @param id
+	 * 必须是admin角色才能删除（现在写死）
+	 * 传参: id和{key:Authorization   values:Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIx....}
+	 * 获取的参数：  header = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxMDgzMjU1ODI..."
 	 */
 	public void deleteById(String id) {
+		//提取前
+		/*String header = request.getHeader("Authorization");//获取请求头信息
+		if(header == null || "".equals(header)){
+			throw new RuntimeException("权限不足");
+			//return new Result(false, StatusCode.ACCESSERROR,"权限不足"); 这个写在了controller层
+		}
+		if(!header.startsWith("Bearer ")){  //前后端在header约定的,startsWith获取的是Bearer （固定写法）
+			throw new RuntimeException("权限不足");
+		}
+		try {
+			String token = header.substring(7);//提取token
+			Claims claims = jwtUtil.parseJWT(token);
+			String roles = (String) claims.get("roles");
+			if (roles == null || !roles.equals("admin")){
+				throw new RuntimeException("权限不足");
+			}
+		}catch (Exception e){
+			throw new RuntimeException("权限不足");
+		}*/
+		//提取后的调用
+		String token = (String) request.getAttribute("claims_admin");
+		if(token == null || "".equals(token)){
+			throw new RuntimeException("权限不足！");
+		}
 		userDao.deleteById(id);
 	}
 
@@ -190,4 +230,11 @@ public class UserService {
 
 	}
 
+    public User login(String mobile, String password) {
+		User user = userDao.findByMobile(mobile);
+		if(user != null && encoder.matches(password,user.getPassword())){
+			return user;
+		}
+		return null;
+    }
 }

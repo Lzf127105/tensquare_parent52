@@ -1,28 +1,22 @@
 package com.tensquare.user.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-
+import com.tensquare.user.dao.AdminDao;
+import com.tensquare.user.pojo.Admin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import util.IdWorker;
 
-import com.tensquare.user.dao.AdminDao;
-import com.tensquare.user.pojo.Admin;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 服务层
@@ -38,6 +32,24 @@ public class AdminService {
 	
 	@Autowired
 	private IdWorker idWorker;
+
+	@Autowired
+	private BCryptPasswordEncoder encoder;
+
+	/**
+	 * 登录
+	 */
+	public Admin login(Admin admin){
+		//先根据用户名查询对象
+		Admin adminLogin = adminDao.findByLoginname(admin.getLoginname());
+		//然后拿数据库中的密码和用户输入的密码匹配是否相同
+		if(adminLogin != null && encoder.matches(admin.getPassword(),adminLogin.getPassword())){
+			//登录成功
+			return adminLogin;
+		}
+		//除了匹配成功的，其他全部是登录失败
+		return null;
+	}
 
 	/**
 	 * 查询全部列表
@@ -87,6 +99,7 @@ public class AdminService {
 	 */
 	public void add(Admin admin) {
 		admin.setId( idWorker.nextId()+"" );
+		admin.setPassword(encoder.encode(admin.getPassword())); //密码加密
 		adminDao.save(admin);
 	}
 
