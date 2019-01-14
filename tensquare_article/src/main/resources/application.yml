@@ -13,3 +13,9 @@ spring:
     show-sql: true
   redis:
     host: 192.168.78.128
+eureka:
+  client:
+    service-url: #Eureka客户端与Eureka服务端进行交互的地址
+      defaultZone: http://127.0.0.1:6868/eureka/
+  instance:
+    prefer-ip-address: true  #部署在线上时，模块之间可以跨域访问

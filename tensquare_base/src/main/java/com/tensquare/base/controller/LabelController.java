@@ -19,7 +19,7 @@ import java.util.List;
 @CrossOrigin
 @RestController
 @RequestMapping(value = "/label")
-public class BaseController {
+public class LabelController {
 
     @Autowired
     private LabelService labelService;
@@ -31,6 +31,7 @@ public class BaseController {
 
     @RequestMapping(value = "{labelId}", method = RequestMethod.GET)
     public Result findById(@PathVariable("labelId") String labelId){
+        System.out.println("11111111");
         return  new Result(true, StatusCode.OK ,"查询成功！",labelService.findById(labelId));
     }
 

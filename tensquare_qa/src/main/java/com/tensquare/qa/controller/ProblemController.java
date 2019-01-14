@@ -1,4 +1,5 @@
 package com.tensquare.qa.controller;
+import com.tensquare.qa.client.BaseClient;
 import com.tensquare.qa.pojo.Problem;
 import com.tensquare.qa.service.ProblemService;
 import entity.PageResult;
@@ -25,6 +26,15 @@ public class ProblemController {
 
 	@Autowired
 	private HttpServletRequest request;
+
+	@Autowired
+	private BaseClient baseClient;
+
+	@RequestMapping(value = "/label/{labelId}", method = RequestMethod.GET)
+	public Result findLabelById(@PathVariable("labelId") String labelId){
+		Result result = baseClient.findById(labelId);
+		return result;
+	}
 
 	/**
 	 * 根据标签ID查询最新问题列表

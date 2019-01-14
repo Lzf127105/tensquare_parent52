@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @Description:
  */
 @RestControllerAdvice
-public class BaseExceptionHandler {
+public class LabelExceptionHandler {
 
     @ExceptionHandler(value = Exception.class)
     @ResponseBody

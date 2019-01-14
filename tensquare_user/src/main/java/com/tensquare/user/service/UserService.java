@@ -19,6 +19,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 @Service
+@Transactional
 public class UserService {
 
 	@Autowired
@@ -236,5 +238,10 @@ public class UserService {
 			return user;
 		}
 		return null;
+    }
+
+    public void updateFanscountAndFollowCount(int flag, String userid, String friendid) {
+		userDao.updateFanscount(flag,friendid);
+		userDao.updateFollowCount(flag,userid);
     }
 }
