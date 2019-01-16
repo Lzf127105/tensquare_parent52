@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -24,14 +25,22 @@ public class LabelController {
     @Autowired
     private LabelService labelService;
 
+    @Autowired
+    private HttpServletRequest request;
+
     @RequestMapping(method = RequestMethod.GET)
     public Result findAll(){
+        //获取头部信息
+        String header = request.getHeader("Authorization");
+        //经过yml处理统一端口请求，ManagerFilter/WebFilter后，头部信息丢失（Bug）
+        //解决方法：在WebFilter实现的run()方法中，进行网站前台的token转发
+        System.out.println("测试经过网关过滤器后，是否还能拿到头部信息："+header);
         return  new Result(true, StatusCode.OK ,"查询成功！",labelService.findAll());
     }
 
     @RequestMapping(value = "{labelId}", method = RequestMethod.GET)
     public Result findById(@PathVariable("labelId") String labelId){
-        System.out.println("11111111");
+        System.out.println("远程调用了label标签！");
         return  new Result(true, StatusCode.OK ,"查询成功！",labelService.findById(labelId));
     }
 

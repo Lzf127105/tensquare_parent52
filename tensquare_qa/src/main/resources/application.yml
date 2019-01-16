@@ -20,3 +20,6 @@ eureka:
       defaultZone: http://127.0.0.1:6868/eureka/
   instance:
     prefer-ip-address: true  #部署在线上时，模块之间可以跨域访问
+feign: #熔断器
+  hystrix:
+    enabled: true
