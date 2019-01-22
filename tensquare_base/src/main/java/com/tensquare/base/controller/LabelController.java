@@ -6,6 +6,8 @@ import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,9 +18,16 @@ import java.util.List;
  * @author Lzf
  * @create 2018-12-25 10:47
  * @Description:
+ * git自定义的ip的步骤：(不重启服务)
+ * 1、在配置里面自定一个字段
+ * 2、yml加入#暴露触发消息总线的地址
+ * 3、加入jar包（spring‐cloud‐bus和spring‐cloud‐stream‐binder‐rabbit）
+ * 4、@RefreshScope
+ * 5、@Value("${ip}") private String ip;
  */
 @CrossOrigin
 @RestController
+@RefreshScope
 @RequestMapping(value = "/label")
 public class LabelController {
 
@@ -28,8 +37,12 @@ public class LabelController {
     @Autowired
     private HttpServletRequest request;
 
+    @Value("${ip}")
+    private String ip;
+
     @RequestMapping(method = RequestMethod.GET)
     public Result findAll(){
+        System.out.println("获取git自定义的ip:"+ip);
         //获取头部信息
         String header = request.getHeader("Authorization");
         //经过yml处理统一端口请求，ManagerFilter/WebFilter后，头部信息丢失（Bug）

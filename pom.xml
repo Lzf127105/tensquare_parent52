@@ -23,6 +23,7 @@
         <module>tensquare_friend</module>
         <module>tensquare_manager</module>
         <module>comtensquare_web</module>
+        <module>tensquare_config</module>
     </modules>
     <packaging>pom</packaging>
 

@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    config:
+      name: base #git服务上面，base-dev的前缀
+      profile: dev #base-dev的后缀
+      label: master #git服务主干
+      uri: http://127.0.0.1:12000
